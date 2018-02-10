@@ -22,15 +22,20 @@ public class GameManager : MonoBehaviour
 
     //public Sprite semeCuori, semeQuadri, semeFiori, SemePicche;
     public Sprite fondoCarta;
+    public GameObject cardToField;
 
-    public GameObject[] finalDeck = new GameObject[52];
+    public GameObject[] orderedDeck = new GameObject[52];
 
     public List<GameObject> shuffledDeck;
+
+
+    bool exitToCoro;
+    float remainingTimePerc;
 
     // Use this for initialization
     void Start()
     {
-        finalDeck = new GameObject[52];
+        orderedDeck = new GameObject[52];
         CreateDeck();
     }
 
@@ -52,7 +57,7 @@ public class GameManager : MonoBehaviour
             for (int j = 0; j < 13; j++)
             {
                 GameObject newCard = Instantiate(cardPrefab);
-                finalDeck[nCards] = newCard;
+                orderedDeck[nCards] = newCard;
                 nCards++;
                 newCard.transform.SetParent(acePositions[i].transform);
                 newCard.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, offsetPosition);
@@ -100,7 +105,7 @@ public class GameManager : MonoBehaviour
     public void CreateDeck()
     {
         int nCards = 0;
-        int offsetPosition = 40;
+        int offsetPosition = 0;
 
         //Per ogni seme creiamo 13 carte 
         for (int i = 0; i < acePositions.Length; i++)
@@ -111,7 +116,7 @@ public class GameManager : MonoBehaviour
                 GameObject newCard = Instantiate(cardPrefab);
 
                 //Aggiungiamo la carta all'array del mazzo finale che le conterrà tutte
-                finalDeck[nCards] = newCard;
+                orderedDeck[nCards] = newCard;
                 nCards++;
 
                 //Settiamo la nuova carta come child della zona Deck
@@ -132,6 +137,9 @@ public class GameManager : MonoBehaviour
                         newCard.transform.GetChild(2).GetComponent<Image>().color = new Color32(196, 47, 55, 255);
 
                         newCard.GetComponent<CardHandler>().segno = "CUORI";
+                        newCard.GetComponent<CardHandler>().typeOfCard = CardSymbol.CUORI;
+                        newCard.GetComponent<CardHandler>().colorOfCard = CardColor.ROSSO;
+
                         newCard.GetComponent<CardHandler>().cardValue = (j + 1);
                         newCard.name = (newCard.GetComponent<CardHandler>().segno + "_" + newCard.GetComponent<CardHandler>().cardValue);
 
@@ -144,6 +152,9 @@ public class GameManager : MonoBehaviour
                         newCard.transform.GetChild(2).GetComponent<Image>().color = new Color32(196, 47, 55, 255);
 
                         newCard.GetComponent<CardHandler>().segno = "QUADRI";
+                        newCard.GetComponent<CardHandler>().typeOfCard = CardSymbol.QUADRI;
+                        newCard.GetComponent<CardHandler>().colorOfCard = CardColor.ROSSO;
+
                         newCard.GetComponent<CardHandler>().cardValue = (j + 1);
                         newCard.name = (newCard.GetComponent<CardHandler>().segno + "_" + newCard.GetComponent<CardHandler>().cardValue);
 
@@ -156,6 +167,9 @@ public class GameManager : MonoBehaviour
                         newCard.transform.GetChild(2).GetComponent<Image>().color = Color.black;
 
                         newCard.GetComponent<CardHandler>().segno = "FIORI";
+                        newCard.GetComponent<CardHandler>().typeOfCard = CardSymbol.FIORI;
+                        newCard.GetComponent<CardHandler>().colorOfCard = CardColor.NERO;
+
                         newCard.GetComponent<CardHandler>().cardValue = (j + 1);
                         newCard.name = (newCard.GetComponent<CardHandler>().segno + "_" + newCard.GetComponent<CardHandler>().cardValue);
 
@@ -168,6 +182,9 @@ public class GameManager : MonoBehaviour
                         newCard.transform.GetChild(2).GetComponent<Image>().color = Color.black;
 
                         newCard.GetComponent<CardHandler>().segno = "PICCHE";
+                        newCard.GetComponent<CardHandler>().typeOfCard = CardSymbol.PICCHE;
+                        newCard.GetComponent<CardHandler>().colorOfCard = CardColor.NERO;
+
                         newCard.GetComponent<CardHandler>().cardValue = (j + 1);
                         newCard.name = (newCard.GetComponent<CardHandler>().segno + "_" + newCard.GetComponent<CardHandler>().cardValue);
 
@@ -187,26 +204,32 @@ public class GameManager : MonoBehaviour
     public void ShuffleCardsPosition()
     {
         //Mescoliamo le carte del mazzo nell'area deck del campo da gioco
-        for (int i = 0; i < finalDeck.Length; i++)
+        for (int i = 0; i < orderedDeck.Length; i++)
         {
             int randomIndex = Random.Range(0, 52);
-            finalDeck[i].transform.SetSiblingIndex(randomIndex);
+            orderedDeck[i].transform.SetSiblingIndex(randomIndex);
         }
 
         //Aggiungiamo le carte mescolate ad una lista di oggetti da cui poi le tireremo fuori per metterle sul campo
         int children = deckPosition.transform.childCount;
-        for (int i = 0; i < children; ++i)
+        for (int i = 0; i < children; i++)
         {
             shuffledDeck.Add(deckPosition.transform.GetChild(i).gameObject);
         }
 
 
-        SetCardsOnPlayField();
+        for (int i = 0; i < 28; i++)
+        {
+            shuffledDeck[i].transform.SetParent(cardToField.transform);
+            shuffledDeck[i].GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 0);
+        }
+
+        StartCoroutine(SetCardsOnPlayField());
     }
 
 
     //Trasformare questo metodo in coroutine e temporizzare le transizioni delle carte dal deck alla nuova posizione sul campo <------
-    public void SetCardsOnPlayField ()
+    public IEnumerator SetCardsOnPlayField ()
     {
         int offsetPosition = 0;
         int cardToExtract = 0;      
@@ -220,10 +243,30 @@ public class GameManager : MonoBehaviour
             //Per ogni posizione nel campo estraiamo tante carte quanto è il numero della posizione + 1
             for (int j = 0; j < (i+1); j++)
             {
+ 
+
+                float timeToComplete = 0.05f;
+
+                var startPos = shuffledDeck[cardToExtract].transform.position;
+                float currTime = 0f;
+                remainingTimePerc = 0f;
+
+                while (currTime < timeToComplete)
+                {
+                    currTime += Time.deltaTime;
+                    remainingTimePerc += Time.deltaTime / timeToComplete;
+                    shuffledDeck[cardToExtract].transform.position = Vector3.Lerp(startPos, fieldPositions[i].transform.position + new Vector3(0f, offsetPosition, 0f), currTime / timeToComplete);
+                    yield return null;
+                }
 
                 shuffledDeck[cardToExtract].transform.SetParent(fieldPositions[i].transform);
-                shuffledDeck[cardToExtract].GetComponent<RectTransform>().anchoredPosition = new Vector2(0, offsetPosition);
-                offsetPosition -= 60;
+
+                //StartCoroutine(MoveToPosition(shuffledDeck[cardToExtract], fieldPositions[i], 1f, offsetPosition));
+
+
+                //shuffledDeck[cardToExtract].GetComponent<RectTransform>().anchoredPosition = new Vector2(0, offsetPosition);
+
+                offsetPosition -= 30;
 
                 //Se è l'ultima carta piazzata di questa posizione la scopriamo
                 if(i == j)
@@ -238,11 +281,6 @@ public class GameManager : MonoBehaviour
 
         print("Total Cards Extracted: " + cardToExtract);
 
-
-        //Spostare tutte le carte rimaste nel mazzo nella corretta position del deckPlace
-
-        //
-        deckPosition.GetComponent<Image>().sprite = fondoCarta;
     }
 
 }

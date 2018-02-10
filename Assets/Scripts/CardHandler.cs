@@ -3,7 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum CardSymbol { NULL, CUORI, QUADRI, FIORI, PICCHE }
+
+public enum CardColor { NULL, ROSSO, NERO }
+
 public class CardHandler : MonoBehaviour {
+
+    public CardColor colorOfCard = CardColor.NULL;
+    
+    public CardSymbol typeOfCard = CardSymbol.NULL;
 
     public string segno;
     public int cardValue;

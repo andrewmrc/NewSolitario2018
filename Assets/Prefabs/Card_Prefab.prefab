@@ -57,6 +57,8 @@ GameObject:
   - component: {fileID: 114994819601762710}
   - component: {fileID: 114314090529175036}
   - component: {fileID: 95121331469286656}
+  - component: {fileID: 114864977901081736}
+  - component: {fileID: 225801940754391660}
   m_Layer: 5
   m_Name: Card_Prefab
   m_TagString: Untagged
@@ -128,7 +130,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0.7686275, g: 0.18431373, b: 0.21568629, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -153,9 +155,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb8e52791fd92d743bf268c4a72d685e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  colorOfCard: 0
+  typeOfCard: 0
   segno: 
   cardValue: 0
-  rotationSpeed: 0.02
   anim: {fileID: 0}
 --- !u!114 &114450696549220786
 MonoBehaviour:
@@ -170,7 +173,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -197,7 +200,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -211,6 +214,18 @@ MonoBehaviour:
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
+--- !u!114 &114864977901081736
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1563257248708058}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e80baeb8e4dd0624090abf37d416d0f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  parentToReturnTo: {fileID: 0}
 --- !u!114 &114907413349555098
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -224,7 +239,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -389,3 +404,14 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 132.5, y: 206.7}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!225 &225801940754391660
+CanvasGroup:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1563257248708058}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
