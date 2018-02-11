@@ -7,11 +7,19 @@ public enum CardSymbol { NULL, CUORI, QUADRI, FIORI, PICCHE }
 
 public enum CardColor { NULL, ROSSO, NERO }
 
+public enum CardPosition { DECK, DRAW, FIELD, FINAL }
+
+public enum CardStatus { COVERED, UNCOVERED }
+
 public class CardHandler : MonoBehaviour {
 
-    public CardColor colorOfCard = CardColor.NULL;
+    public CardColor cardColor = CardColor.NULL;
     
-    public CardSymbol typeOfCard = CardSymbol.NULL;
+    public CardSymbol cardType = CardSymbol.NULL;
+
+    public CardPosition cardPosition = CardPosition.DECK;
+
+    public CardStatus cardStatus = CardStatus.COVERED;
 
     public string segno;
     public int cardValue;
@@ -21,14 +29,8 @@ public class CardHandler : MonoBehaviour {
 	// Use this for initialization
 	void Awake () {
         anim = this.GetComponent<Animator>();
-        //FlipCard(true);
     }
 	
-	// Update is called once per frame
-	void Update () {
-
-    }
-
 
     public void FlipCard (bool flipDirection)
     {
@@ -40,6 +42,19 @@ public class CardHandler : MonoBehaviour {
             anim.SetBool("flip", false);
         }
     }
+
+    public void CheckStatus ()
+    {
+        if(this.cardStatus == CardStatus.UNCOVERED)
+        {
+            FlipCard(true);
+        } else if(this.cardStatus == CardStatus.COVERED)
+        {
+            FlipCard(false);
+        }
+    }
+
+
 
 
 }

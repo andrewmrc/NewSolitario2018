@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DeckCreator : MonoBehaviour {
+public class TapHandler : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {

@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
+    public GameObject drawButton;
 
     public GameObject cardPrefab;
 
@@ -21,13 +22,16 @@ public class GameManager : MonoBehaviour
     public Sprite[] cardSemi;
 
     //public Sprite semeCuori, semeQuadri, semeFiori, SemePicche;
-    public Sprite fondoCarta;
+
     public GameObject cardToField;
 
     public GameObject[] orderedDeck = new GameObject[52];
 
     public List<GameObject> shuffledDeck;
 
+    public List<GameObject> cardsOnField;
+
+    public List<GameObject> cardsInDeck;
 
     bool exitToCoro;
     float remainingTimePerc;
@@ -37,12 +41,6 @@ public class GameManager : MonoBehaviour
     {
         orderedDeck = new GameObject[52];
         CreateDeck();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
     }
 
 
@@ -137,8 +135,8 @@ public class GameManager : MonoBehaviour
                         newCard.transform.GetChild(2).GetComponent<Image>().color = new Color32(196, 47, 55, 255);
 
                         newCard.GetComponent<CardHandler>().segno = "CUORI";
-                        newCard.GetComponent<CardHandler>().typeOfCard = CardSymbol.CUORI;
-                        newCard.GetComponent<CardHandler>().colorOfCard = CardColor.ROSSO;
+                        newCard.GetComponent<CardHandler>().cardType = CardSymbol.CUORI;
+                        newCard.GetComponent<CardHandler>().cardColor = CardColor.ROSSO;
 
                         newCard.GetComponent<CardHandler>().cardValue = (j + 1);
                         newCard.name = (newCard.GetComponent<CardHandler>().segno + "_" + newCard.GetComponent<CardHandler>().cardValue);
@@ -152,8 +150,8 @@ public class GameManager : MonoBehaviour
                         newCard.transform.GetChild(2).GetComponent<Image>().color = new Color32(196, 47, 55, 255);
 
                         newCard.GetComponent<CardHandler>().segno = "QUADRI";
-                        newCard.GetComponent<CardHandler>().typeOfCard = CardSymbol.QUADRI;
-                        newCard.GetComponent<CardHandler>().colorOfCard = CardColor.ROSSO;
+                        newCard.GetComponent<CardHandler>().cardType = CardSymbol.QUADRI;
+                        newCard.GetComponent<CardHandler>().cardColor = CardColor.ROSSO;
 
                         newCard.GetComponent<CardHandler>().cardValue = (j + 1);
                         newCard.name = (newCard.GetComponent<CardHandler>().segno + "_" + newCard.GetComponent<CardHandler>().cardValue);
@@ -167,8 +165,8 @@ public class GameManager : MonoBehaviour
                         newCard.transform.GetChild(2).GetComponent<Image>().color = Color.black;
 
                         newCard.GetComponent<CardHandler>().segno = "FIORI";
-                        newCard.GetComponent<CardHandler>().typeOfCard = CardSymbol.FIORI;
-                        newCard.GetComponent<CardHandler>().colorOfCard = CardColor.NERO;
+                        newCard.GetComponent<CardHandler>().cardType = CardSymbol.FIORI;
+                        newCard.GetComponent<CardHandler>().cardColor = CardColor.NERO;
 
                         newCard.GetComponent<CardHandler>().cardValue = (j + 1);
                         newCard.name = (newCard.GetComponent<CardHandler>().segno + "_" + newCard.GetComponent<CardHandler>().cardValue);
@@ -182,8 +180,8 @@ public class GameManager : MonoBehaviour
                         newCard.transform.GetChild(2).GetComponent<Image>().color = Color.black;
 
                         newCard.GetComponent<CardHandler>().segno = "PICCHE";
-                        newCard.GetComponent<CardHandler>().typeOfCard = CardSymbol.PICCHE;
-                        newCard.GetComponent<CardHandler>().colorOfCard = CardColor.NERO;
+                        newCard.GetComponent<CardHandler>().cardType = CardSymbol.PICCHE;
+                        newCard.GetComponent<CardHandler>().cardColor = CardColor.NERO;
 
                         newCard.GetComponent<CardHandler>().cardValue = (j + 1);
                         newCard.name = (newCard.GetComponent<CardHandler>().segno + "_" + newCard.GetComponent<CardHandler>().cardValue);
@@ -244,7 +242,7 @@ public class GameManager : MonoBehaviour
             for (int j = 0; j < (i+1); j++)
             {
  
-
+                //Muoviamo la carta nella nuova posizione in campo
                 float timeToComplete = 0.05f;
 
                 var startPos = shuffledDeck[cardToExtract].transform.position;
@@ -259,28 +257,193 @@ public class GameManager : MonoBehaviour
                     yield return null;
                 }
 
-                shuffledDeck[cardToExtract].transform.SetParent(fieldPositions[i].transform);
-
-                //StartCoroutine(MoveToPosition(shuffledDeck[cardToExtract], fieldPositions[i], 1f, offsetPosition));
-
-
-                //shuffledDeck[cardToExtract].GetComponent<RectTransform>().anchoredPosition = new Vector2(0, offsetPosition);
-
-                offsetPosition -= 30;
-
                 //Se è l'ultima carta piazzata di questa posizione la scopriamo
-                if(i == j)
+                if (i == j)
                 {
                     shuffledDeck[cardToExtract].GetComponent<CardHandler>().FlipCard(true);
+                    shuffledDeck[cardToExtract].GetComponent<CardHandler>().cardStatus = CardStatus.UNCOVERED;
                 }
+
+                //Agganciamo la carta estratta come child alla posizione del campo corretta
+                shuffledDeck[cardToExtract].transform.SetParent(fieldPositions[i].transform);
+
+                //Settiamo alla carta estratta che la sua posizione è ora sul campo = FIELD
+                shuffledDeck[cardToExtract].GetComponent<CardHandler>().cardPosition = CardPosition.FIELD;
+
+                //Decrementiamo l'offset per fare in modo che ogni carta non sia completamente sovrapposta alla precedente
+                offsetPosition -= 30;
 
                 //Aumentiamo il valore così da prendere la carta successiva dal mazzo
                 cardToExtract++;
             }
         }
 
+        cardToField.SetActive(false);
+
+        SetCardsOnList();
+
+        drawButton.SetActive(true);
+
         print("Total Cards Extracted: " + cardToExtract);
+    }
+
+
+    //public void MoveCardCallCo (GameObject cardObject, Vector3 posToReach)
+    //{
+    //    StartCoroutine(MoveCardToPosition(cardObject, posToReach));
+    //}
+
+    //Metodo per traslare una carta da una posizione ad un'altra
+    public IEnumerator MoveCardToPosition(GameObject cardToMove, Vector3 newPos, float timeToReach)
+    {
+        float timeToComplete = timeToReach;
+
+        var lastPos = cardToMove.transform.position;
+        float currTime = 0f;
+        float remainingTimePerc = 0f;
+
+        while (currTime < timeToComplete)
+        {
+            currTime += Time.deltaTime;
+            remainingTimePerc += Time.deltaTime / timeToComplete;
+            cardToMove.transform.position = Vector3.Lerp(lastPos, newPos, currTime / timeToComplete);
+            yield return null;
+        }
 
     }
+
+
+    public void SetCardsOnList ()
+    {
+        for (int i = 0; i < shuffledDeck.Count; i++)
+        {
+            if(shuffledDeck[i].GetComponent<CardHandler>().cardPosition == CardPosition.FIELD)
+            {
+                //Aggiungiamo la carta trovata a una lista di carte che sono sul campo
+                cardsOnField.Add(shuffledDeck[i]);
+            } else if (shuffledDeck[i].GetComponent<CardHandler>().cardPosition == CardPosition.DECK)
+            {
+                //Aggiungiamo la carta trovata alla lista di carte rimaste nel mazzo
+                cardsInDeck.Add(shuffledDeck[i]);
+            }
+        }
+
+    }
+
+
+    //Metodo che estrae le carte dal mazzo e le sposta nella zona di Draw
+    public void DrawCard ()
+    {
+        int position = 2;
+
+        //Se c'è almeno una carta nel mazzo la estraiamo e posizioniamo nella zona draw corretta
+        if (deckPosition.transform.childCount > 0)
+        {
+            GameObject cardToExtract = deckPosition.transform.GetChild(deckPosition.transform.childCount - 1).gameObject;
+
+            if(drawCardsPositions[0].transform.childCount < 1)
+            {
+                print("POSITION 1");
+                position = 0;
+            } else if (drawCardsPositions[1].transform.childCount < 1)
+            {
+                print("POSITION 2");
+                position = 1;
+
+                //Disabilitiamo il raycast alla carta nella posizioni precedenti
+                GameObject cardInPos0 = drawCardsPositions[0].transform.GetChild(0).gameObject;
+                cardInPos0.GetComponent<CanvasGroup>().blocksRaycasts = false;
+
+            } else if (drawCardsPositions[2].transform.childCount < 1)
+            {
+                print("POSITION 3");
+                position = 2;
+
+                //Disabilitiamo il raycast alla carta nella posizioni precedenti
+                GameObject cardInPos1 = drawCardsPositions[1].transform.GetChild(0).gameObject;
+                cardInPos1.GetComponent<CanvasGroup>().blocksRaycasts = false;
+
+            } else
+            {
+                //La carta in posizione 1 va in posizione 0
+                GameObject cardInPos1 = drawCardsPositions[1].transform.GetChild(0).gameObject;
+                cardInPos1.transform.SetParent(drawCardsPositions[0].transform);
+                StartCoroutine(MoveCardToPosition(cardInPos1, drawCardsPositions[0].transform.position, 0.5f));
+                cardInPos1.GetComponent<CanvasGroup>().blocksRaycasts = false;
+
+                //La carta in posizione 2 va in posizione 1
+                GameObject cardInPos2 = drawCardsPositions[2].transform.GetChild(0).gameObject;
+                cardInPos2.transform.SetParent(drawCardsPositions[1].transform);
+                StartCoroutine(MoveCardToPosition(cardInPos2, drawCardsPositions[1].transform.position, 0.5f));
+                cardInPos2.GetComponent<CanvasGroup>().blocksRaycasts = false;
+
+            }
+
+            //La carta nuova va in posizione 2
+            cardToExtract.GetComponent<CardHandler>().cardPosition = CardPosition.DRAW;
+            cardToExtract.GetComponent<CardHandler>().cardStatus = CardStatus.UNCOVERED;
+            cardToExtract.GetComponent<CardHandler>().CheckStatus();
+            cardToExtract.transform.SetParent(drawCardsPositions[position].transform);
+            StartCoroutine(MoveCardToPosition(cardToExtract, drawCardsPositions[position].transform.position, 0.5f));
+
+        } else
+        {
+            //Rimettiamo tutte le carte nel mazzo coprendole
+            for (int i = 0; i < cardsInDeck.Count; i++)
+            {
+                if(cardsInDeck[i].GetComponent<CardHandler>().cardPosition == CardPosition.DRAW)
+                {
+                    //COSI' NON VA BENE!!!
+                    cardsInDeck[i].GetComponent<Animator>().speed = 3;
+
+                    cardsInDeck[i].GetComponent<CardHandler>().cardStatus = CardStatus.COVERED;
+                    cardsInDeck[i].GetComponent<CardHandler>().CheckStatus();
+                    cardsInDeck[i].transform.SetParent(deckPosition.transform);
+                    cardsInDeck[i].GetComponent<CanvasGroup>().blocksRaycasts = true;
+                    StartCoroutine(MoveCardToPosition(cardsInDeck[i], deckPosition.transform.position, 0.025f));
+                }
+            }
+        }
+
+    }
+
+
+    public void UseDrawCardConsequences ()
+    {
+        print("CONSEQ");
+        if(drawCardsPositions[0].transform.childCount > 1)
+        {
+            print("CONSEQ INSIDE");
+
+            //Rispostiamo l'ultima carta in posizione 1 nella posizione 2 che è rimasta vuota
+            GameObject cardInPos1 = drawCardsPositions[1].transform.GetChild(drawCardsPositions[1].transform.childCount - 1).gameObject;
+            cardInPos1.transform.SetParent(drawCardsPositions[2].transform);
+            StartCoroutine(MoveCardToPosition(cardInPos1, drawCardsPositions[2].transform.position, 0.5f));
+            cardInPos1.GetComponent<CanvasGroup>().blocksRaycasts = true;
+
+            //Rispostiamo l'ultima carta in posizione 0 nella posizione 1
+            GameObject cardInPos0 = drawCardsPositions[0].transform.GetChild(drawCardsPositions[0].transform.childCount - 1).gameObject;
+            cardInPos0.transform.SetParent(drawCardsPositions[1].transform);
+            StartCoroutine(MoveCardToPosition(cardInPos0, drawCardsPositions[1].transform.position, 0.5f));
+
+        } else
+        {
+            //In caso non avvengano spostamenti allora riattiviamo il raycast alle carte in posizione 0 o 1 così da poterle utilizzare
+            if(drawCardsPositions[1].transform.childCount > 0)
+            {
+                GameObject cardInPos1 = drawCardsPositions[1].transform.GetChild(drawCardsPositions[1].transform.childCount - 1).gameObject;
+                cardInPos1.GetComponent<CanvasGroup>().blocksRaycasts = true;
+            } else if(drawCardsPositions[0].transform.childCount > 0)
+            {
+                GameObject cardInPos0 = drawCardsPositions[0].transform.GetChild(drawCardsPositions[0].transform.childCount - 1).gameObject;
+                cardInPos0.GetComponent<CanvasGroup>().blocksRaycasts = true;
+            }
+        }
+    }
+
+    //Controllo zona assi con il doppio tap: cicla sulle 4 posizioni e controlla se la carta tappata è l'asso e la zona sua è vuota allora lo sposta
+    //Per le altre carte controlla quale sia la sua zona e se la carta last child che si trova lì è minore del suo valore, in tal caso la sposta
+
+
 
 }
