@@ -155,8 +155,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb8e52791fd92d743bf268c4a72d685e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  colorOfCard: 0
-  typeOfCard: 0
+  cardColor: 0
+  cardType: 0
+  cardPosition: 0
+  cardStatus: 0
   segno: 
   cardValue: 0
   anim: {fileID: 0}
@@ -225,6 +227,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e80baeb8e4dd0624090abf37d416d0f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  manager: {fileID: 0}
   parentToReturnTo: {fileID: 0}
 --- !u!114 &114907413349555098
 MonoBehaviour:

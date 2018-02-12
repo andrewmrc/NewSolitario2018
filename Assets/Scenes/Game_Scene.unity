@@ -354,7 +354,6 @@ GameObject:
   - component: {fileID: 158744705}
   - component: {fileID: 158744707}
   - component: {fileID: 158744706}
-  - component: {fileID: 158744708}
   m_Layer: 5
   m_Name: Quadri_Place
   m_TagString: Untagged
@@ -414,17 +413,6 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 158744704}
---- !u!114 &158744708
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 158744704}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f7eb38a08c149a4f84a1f721b0498d1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &242579877
 GameObject:
   m_ObjectHideFlags: 0
@@ -1168,7 +1156,6 @@ GameObject:
   - component: {fileID: 606623460}
   - component: {fileID: 606623462}
   - component: {fileID: 606623461}
-  - component: {fileID: 606623463}
   m_Layer: 5
   m_Name: Fiori_Place
   m_TagString: Untagged
@@ -1228,17 +1215,6 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 606623459}
---- !u!114 &606623463
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 606623459}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f7eb38a08c149a4f84a1f721b0498d1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &698208487
 GameObject:
   m_ObjectHideFlags: 0
@@ -1446,6 +1422,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51d093de506b6a54bbe9ee72bf1a0491, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  score: 0
+  gameAction: 0
+  scoreText: {fileID: 987061888}
+  gameActionText: {fileID: 599143860}
   drawButton: {fileID: 434762059}
   cardPrefab: {fileID: 1563257248708058, guid: bedfa9e59c82e8e4e8372c33f559e835, type: 2}
   deckPosition: {fileID: 1945056864}
@@ -1627,7 +1607,7 @@ GameObject:
   - component: {fileID: 923220625}
   - component: {fileID: 923220624}
   m_Layer: 5
-  m_Name: Points_Text
+  m_Name: Score_Description
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1648,8 +1628,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 136.5, y: 40.575}
-  m_SizeDelta: {x: 273, y: 81.15}
+  m_AnchoredPosition: {x: 136.5, y: 33.8}
+  m_SizeDelta: {x: 273, y: 67.7}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &923220624
 MonoBehaviour:
@@ -1701,7 +1681,7 @@ GameObject:
   - component: {fileID: 987061889}
   - component: {fileID: 987061888}
   m_Layer: 5
-  m_Name: Points_Value
+  m_Name: Score_Value
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1775,7 +1755,7 @@ GameObject:
   - component: {fileID: 1034539543}
   - component: {fileID: 1034539542}
   m_Layer: 5
-  m_Name: Mosse_Text
+  m_Name: Mosse_Description
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1796,8 +1776,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -136.5, y: 40.575}
-  m_SizeDelta: {x: 273, y: 81.15}
+  m_AnchoredPosition: {x: -136.5, y: 33.825}
+  m_SizeDelta: {x: 273, y: 67.65}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1034539542
 MonoBehaviour:
@@ -2273,7 +2253,6 @@ GameObject:
   - component: {fileID: 1543023431}
   - component: {fileID: 1543023433}
   - component: {fileID: 1543023432}
-  - component: {fileID: 1543023434}
   m_Layer: 5
   m_Name: Picche_Place
   m_TagString: Untagged
@@ -2333,17 +2312,6 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1543023430}
---- !u!114 &1543023434
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1543023430}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f7eb38a08c149a4f84a1f721b0498d1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &1623415298
 Prefab:
   m_ObjectHideFlags: 0
@@ -2531,7 +2499,6 @@ GameObject:
   - component: {fileID: 1745664455}
   - component: {fileID: 1745664457}
   - component: {fileID: 1745664456}
-  - component: {fileID: 1745664458}
   m_Layer: 5
   m_Name: Cuori_Place
   m_TagString: Untagged
@@ -2591,17 +2558,6 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1745664454}
---- !u!114 &1745664458
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1745664454}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f7eb38a08c149a4f84a1f721b0498d1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1827203393
 GameObject:
   m_ObjectHideFlags: 0

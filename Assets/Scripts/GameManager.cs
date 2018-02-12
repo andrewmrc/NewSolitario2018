@@ -5,6 +5,10 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
+    public int score, gameAction;
+
+    public Text scoreText, gameActionText;
+
     public GameObject drawButton;
 
     public GameObject cardPrefab;
@@ -20,8 +24,6 @@ public class GameManager : MonoBehaviour
     public Sprite[] cardValues;
 
     public Sprite[] cardSemi;
-
-    //public Sprite semeCuori, semeQuadri, semeFiori, SemePicche;
 
     public GameObject cardToField;
 
@@ -199,6 +201,7 @@ public class GameManager : MonoBehaviour
     }
 
 
+    //Metodo che mescola le carte prima di distribuirle sul campo
     public void ShuffleCardsPosition()
     {
         //Mescoliamo le carte del mazzo nell'area deck del campo da gioco
@@ -226,7 +229,7 @@ public class GameManager : MonoBehaviour
     }
 
 
-    //Trasformare questo metodo in coroutine e temporizzare le transizioni delle carte dal deck alla nuova posizione sul campo <------
+    //Estrae e posiziona le carte dal mazzo nel campo all'inizio della partita
     public IEnumerator SetCardsOnPlayField ()
     {
         int offsetPosition = 0;
@@ -278,20 +281,18 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        //Spegne l'oggetto che indicava alle carte del mazzo dove posizionarsi
         cardToField.SetActive(false);
 
+        //Riempie due liste con le carte in campo e quelle rimaste nel mazzo
         SetCardsOnList();
 
+        //Attiva il bottone che permette di pescare le carte dal mazzo
         drawButton.SetActive(true);
 
         print("Total Cards Extracted: " + cardToExtract);
     }
 
-
-    //public void MoveCardCallCo (GameObject cardObject, Vector3 posToReach)
-    //{
-    //    StartCoroutine(MoveCardToPosition(cardObject, posToReach));
-    //}
 
     //Metodo per traslare una carta da una posizione ad un'altra
     public IEnumerator MoveCardToPosition(GameObject cardToMove, Vector3 newPos, float timeToReach)
@@ -312,7 +313,8 @@ public class GameManager : MonoBehaviour
 
     }
 
-
+    
+    //Creiamo e riempiamo due List di carte: quelle in campo e quelle rimaste nel mazzo
     public void SetCardsOnList ()
     {
         for (int i = 0; i < shuffledDeck.Count; i++)
@@ -327,13 +329,15 @@ public class GameManager : MonoBehaviour
                 cardsInDeck.Add(shuffledDeck[i]);
             }
         }
-
     }
 
 
     //Metodo che estrae le carte dal mazzo e le sposta nella zona di Draw
     public void DrawCard ()
     {
+        //Aggiungiamo + 1 al contatore mosse
+        GameActionHandler();
+
         int position = 2;
 
         //Se c'è almeno una carta nel mazzo la estraiamo e posizioniamo nella zona draw corretta
@@ -388,33 +392,58 @@ public class GameManager : MonoBehaviour
 
         } else
         {
+            drawButton.GetComponent<Button>().interactable = false;
             //Rimettiamo tutte le carte nel mazzo coprendole
             for (int i = 0; i < cardsInDeck.Count; i++)
             {
-                if(cardsInDeck[i].GetComponent<CardHandler>().cardPosition == CardPosition.DRAW)
+                if (cardsInDeck[i].GetComponent<CardHandler>().cardPosition == CardPosition.DRAW)
                 {
                     //COSI' NON VA BENE!!!
                     cardsInDeck[i].GetComponent<Animator>().speed = 3;
 
+                    cardsInDeck[i].GetComponent<CardHandler>().cardPosition = CardPosition.DECK;
                     cardsInDeck[i].GetComponent<CardHandler>().cardStatus = CardStatus.COVERED;
                     cardsInDeck[i].GetComponent<CardHandler>().CheckStatus();
                     cardsInDeck[i].transform.SetParent(deckPosition.transform);
                     cardsInDeck[i].GetComponent<CanvasGroup>().blocksRaycasts = true;
-                    StartCoroutine(MoveCardToPosition(cardsInDeck[i], deckPosition.transform.position, 0.025f));
+                    StartCoroutine(MoveCardToPosition(cardsInDeck[i], deckPosition.transform.position, 0.01f));
                 }
             }
-        }
 
+            drawButton.GetComponent<Button>().interactable = true;
+        }
     }
+
+
+    //public IEnumerator DrawCardBackInDeckCO ()
+    //{
+    //    drawButton.GetComponent<Button>().interactable = false;
+    //    //Rimettiamo tutte le carte nel mazzo coprendole
+    //    for (int i = 0; i < cardsInDeck.Count; i++)
+    //    {
+    //        if (cardsInDeck[i].GetComponent<CardHandler>().cardPosition == CardPosition.DRAW)
+    //        {
+    //            //COSI' NON VA BENE!!!
+    //            cardsInDeck[i].GetComponent<Animator>().speed = 3;
+
+    //            cardsInDeck[i].GetComponent<CardHandler>().cardPosition = CardPosition.DECK;
+    //            cardsInDeck[i].GetComponent<CardHandler>().cardStatus = CardStatus.COVERED;
+    //            cardsInDeck[i].GetComponent<CardHandler>().CheckStatus();
+    //            cardsInDeck[i].transform.SetParent(deckPosition.transform);
+    //            cardsInDeck[i].GetComponent<CanvasGroup>().blocksRaycasts = true;
+    //            StartCoroutine(MoveCardToPosition(cardsInDeck[i], deckPosition.transform.position, 0.01f));
+    //        }
+    //    }
+
+    //    yield return new WaitForSeconds(1f);
+    //    drawButton.GetComponent<Button>().interactable = true;
+    //}
 
 
     public void UseDrawCardConsequences ()
     {
-        print("CONSEQ");
         if(drawCardsPositions[0].transform.childCount > 1)
         {
-            print("CONSEQ INSIDE");
-
             //Rispostiamo l'ultima carta in posizione 1 nella posizione 2 che è rimasta vuota
             GameObject cardInPos1 = drawCardsPositions[1].transform.GetChild(drawCardsPositions[1].transform.childCount - 1).gameObject;
             cardInPos1.transform.SetParent(drawCardsPositions[2].transform);
@@ -441,9 +470,27 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    //Controllo zona assi con il doppio tap: cicla sulle 4 posizioni e controlla se la carta tappata è l'asso e la zona sua è vuota allora lo sposta
-    //Per le altre carte controlla quale sia la sua zona e se la carta last child che si trova lì è minore del suo valore, in tal caso la sposta
+
+    //Controlla se ogni carta scoperta in campo può agganciarsi a quelle della zona finale e in tal caso le sposta tutte e completa la partita
+    //Viene chiamato solo dopo che tutte le carte sono in campo quindi come position FIELD e le compara con quelle in position FINAL last child
+    public void CheckSituationForVictory ()
+    {
+
+    }
 
 
+    //Metodo per aggiornare il conteggio mosse
+    public void GameActionHandler ()
+    {
+        gameAction++;
+        gameActionText.text = gameAction.ToString();
+    }
 
+
+    //Metodo per aggiornare il conteggio punti
+    public void ScoreHandler(int value)
+    {
+        score += value;
+        scoreText.text = score.ToString();
+    }
 }
