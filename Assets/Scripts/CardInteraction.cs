@@ -8,7 +8,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public GameManager manager;
 
-	public Transform parentToReturnTo = null;
+	Transform parentToReturnTo = null;
 
     Vector3 startingPos;
 
@@ -33,18 +33,48 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             print("DOUBLE TAP!");
 
             //In base alla posizione di partenza facciamo una serie di controlli per verificare la presenza di una posizione valida a cui agganciarsi
+            ExecuteCheckOnAllCardInField();
 
-            //Controlliamo le carte che vengono dalla zona FIELD
-            if (this.GetComponent<CardHandler>().cardPosition.Equals(CardPosition.FIELD))
+            tap = 0;
+
+        }
+    }
+
+
+    //Esegue un controllo automatico su tutte le carte in gioco per verificare l'esistenza di una mossa corretta ed eseguirla
+    public void ExecuteCheckOnAllCardInField ()
+    {
+        //Controlliamo le carte che vengono dalla zona FIELD
+        if (this.GetComponent<CardHandler>().cardPosition.Equals(CardPosition.FIELD))
+        {
+            //Controlliamo se le carte da FIELD possono attaccarsi alla zona FINAL vuota
+            for (int i = 0; i < manager.acePositions.Length; i++)
             {
-                //Controlliamo se le carte da FIELD possono attaccarsi alla zona FINAL vuota
-                for (int i = 0; i < manager.acePositions.Length; i++)
+                if (!attached)
+                {
+                    print("CONTROLLO AUTOMATICO ESEGUITO!");
+                    SaveReferences();
+                    EndActionConsequences(manager.acePositions[i]);
+                }
+                else
+                {
+                    tap = 0;
+                    attached = false;
+                    return;
+                }
+            }
+
+
+            //Controlliamo se le carte da FIELD possono attaccarsi a qualche carta nella zona FINAL
+            for (int i = 0; i < manager.shuffledDeck.Count; i++)
+            {
+                if (manager.shuffledDeck[i].GetComponent<CardHandler>().cardPosition.Equals(CardPosition.FINAL))
                 {
                     if (!attached)
                     {
                         print("CONTROLLO AUTOMATICO ESEGUITO!");
                         SaveReferences();
-                        EndActionConsequences(manager.acePositions[i]);
+                        EndActionConsequences(manager.shuffledDeck[i]);
                     }
                     else
                     {
@@ -53,119 +83,99 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
                         return;
                     }
                 }
+            }
+        }
 
 
-                //Controlliamo se le carte da FIELD possono attaccarsi a qualche carta nella zona FINAL
-                for (int i = 0; i < manager.shuffledDeck.Count; i++)
+        //Controlliamo le carte che vengono dalla zona DRAW
+        if (this.GetComponent<CardHandler>().cardPosition.Equals(CardPosition.DRAW))
+        {
+
+            //Controlliamo se le carte da DRAW possono attaccarsi alla zona FINAL vuota
+            for (int i = 0; i < manager.acePositions.Length; i++)
+            {
+                if (!attached)
                 {
-                    if (manager.shuffledDeck[i].GetComponent<CardHandler>().cardPosition.Equals(CardPosition.FINAL))
+                    print("CONTROLLO AUTOMATICO ESEGUITO!");
+                    SaveReferences();
+                    EndActionConsequences(manager.acePositions[i]);
+                }
+                else
+                {
+                    tap = 0;
+                    attached = false;
+                    return;
+                }
+            }
+
+
+            //Controlliamo se le carte da posizione DRAW possono attaccarsi a qualche carta nella zona FINAL
+            for (int i = 0; i < manager.shuffledDeck.Count; i++)
+            {
+                if (manager.shuffledDeck[i].GetComponent<CardHandler>().cardPosition.Equals(CardPosition.FINAL))
+                {
+                    if (!attached)
                     {
-                        if (!attached)
-                        {
-                            print("CONTROLLO AUTOMATICO ESEGUITO!");
-                            SaveReferences();
-                            EndActionConsequences(manager.shuffledDeck[i]);
-                        }
-                        else
-                        {
-                            tap = 0;
-                            attached = false;
-                            return;
-                        }
+                        print("CONTROLLO AUTOMATICO ESEGUITO!");
+                        SaveReferences();
+                        EndActionConsequences(manager.shuffledDeck[i]);
+                    }
+                    else
+                    {
+                        tap = 0;
+                        attached = false;
+                        return;
                     }
                 }
             }
 
 
-            //Controlliamo le carte che vengono dalla zona DRAW
-            if (this.GetComponent<CardHandler>().cardPosition.Equals(CardPosition.DRAW)){
-
-                //Controlliamo se le carte da DRAW possono attaccarsi alla zona FINAL vuota
-                for (int i = 0; i < manager.acePositions.Length; i++)
+            //Controlliamo se c'è un posto vuoto dove attaccare la K
+            for (int i = 0; i < manager.fieldPositions.Length; i++)
+            {
+                if (!attached)
                 {
-                    if (!attached)
-                    {
-                        print("CONTROLLO AUTOMATICO ESEGUITO!");
-                        SaveReferences();
-                        EndActionConsequences(manager.acePositions[i]);
-                    }
-                    else
-                    {
-                        tap = 0;
-                        attached = false;
-                        return;
-                    }
+                    print("CONTROLLO AUTOMATICO ESEGUITO!");
+                    SaveReferences();
+                    EndActionConsequences(manager.fieldPositions[i]);
                 }
-
-
-                //Controlliamo se le carte da posizione DRAW possono attaccarsi a qualche carta nella zona FINAL
-                for (int i = 0; i < manager.shuffledDeck.Count; i++)
+                else
                 {
-                    if (manager.shuffledDeck[i].GetComponent<CardHandler>().cardPosition.Equals(CardPosition.FINAL))
-                    {
-                        if (!attached)
-                        {
-                            print("CONTROLLO AUTOMATICO ESEGUITO!");
-                            SaveReferences();
-                            EndActionConsequences(manager.shuffledDeck[i]);
-                        }
-                        else
-                        {
-                            tap = 0;
-                            attached = false;
-                            return;
-                        }
-                    }
+                    tap = 0;
+                    attached = false;
+                    return;
                 }
+            }
 
 
-                //Controlliamo se c'è un posto vuoto dove attaccare la K
-                for (int i = 0; i < manager.fieldPositions.Length; i++)
+            //Controlliamo se le carte da DRAW possono attaccarsi a qualche carta in campo
+            for (int i = 0; i < manager.shuffledDeck.Count; i++)
+            {
+                if (manager.shuffledDeck[i].GetComponent<CardHandler>().cardStatus.Equals(CardStatus.UNCOVERED))
                 {
-                    if (!attached)
+                    if (manager.shuffledDeck[i].GetComponent<CardHandler>().cardPosition.Equals(CardPosition.FIELD))
                     {
-                        print("CONTROLLO AUTOMATICO ESEGUITO!");
-                        SaveReferences();
-                        EndActionConsequences(manager.fieldPositions[i]);
-                    }
-                    else
-                    {
-                        tap = 0;
-                        attached = false;
-                        return;
-                    }
-                }
-
-
-                //Controlliamo se le carte da DRAW possono attaccarsi a qualche carta in campo
-                for (int i = 0; i < manager.shuffledDeck.Count; i++)
-                {
-                    if (manager.shuffledDeck[i].GetComponent<CardHandler>().cardStatus.Equals(CardStatus.UNCOVERED))
-                    {
-                        if (manager.shuffledDeck[i].GetComponent<CardHandler>().cardPosition.Equals(CardPosition.FIELD))
+                        if (manager.shuffledDeck[i].transform.childCount < 5)
                         {
-                            if (manager.shuffledDeck[i].transform.childCount < 5)
+                            if (!attached)
                             {
-                                if (!attached)
-                                {
-                                    print("CONTROLLO AUTOMATICO ESEGUITO!");
-                                    SaveReferences();
-                                    EndActionConsequences(manager.shuffledDeck[i]);
-                                } else
-                                {
-                                    tap = 0;
-                                    attached = false;
-                                    return;
-                                }
+                                print("CONTROLLO AUTOMATICO ESEGUITO!");
+                                SaveReferences();
+                                EndActionConsequences(manager.shuffledDeck[i]);
+                            }
+                            else
+                            {
+                                tap = 0;
+                                attached = false;
+                                return;
                             }
                         }
                     }
                 }
             }
-
-            tap = 0;
-
         }
+
+
     }
 
 
@@ -288,7 +298,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
 
     //Gestisce l'aggancio di una carta ad una nuova posizione - Esegue l'esito di una mossa corretta
-    public void AttachCardHandler (GameObject attachToThisObject, float offset, CardPosition position)
+    public void AttachCardHandler (GameObject attachToThisObject, float offset, CardPosition destinationPosition)
     {
         //Facciamo girare la carta lasciata scoperta se ce ne è almeno una
         if (parentToReturnTo.name.Contains("Posizione"))
@@ -307,23 +317,43 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             manager.UseDrawCardConsequences();
         }
 
-        //Imparentiamo la carta e la riposizioniamo come figlia 
-        StartCoroutine(MoveCardToPosition(attachToThisObject.transform.position - new Vector3(0, offset, 0)));
-        this.transform.SetParent(attachToThisObject.transform);
-        this.GetComponent<CardHandler>().cardPosition = position;
-        GetComponent<CanvasGroup>().blocksRaycasts = true;
 
         //Questo bool deve essere messo a true solo se si arriva qui da un doppio tap
-        if(tap == 2)
+        if (tap == 2)
         {
             attached = true;
-        } else
+        }
+        else
         {
+            //Se le uniche azioni contate come mosse sono quelle con l'aggancio tramite trascinamento allora bisogna scommentare questo codice
+            //manager.GameActionHandler();
             attached = false;
         }
 
+
+        //Gestiamo il punteggio in base alla posizione della carta di partenza e di destinazione
+        manager.ScoreBehaviour(this.GetComponent<CardHandler>().cardPosition, destinationPosition, attached);
+
+
+        //Imparentiamo la carta e la riposizioniamo come figlia assegnandogli la nuova posizione
+        StartCoroutine(MoveCardToPosition(attachToThisObject.transform.position - new Vector3(0, offset, 0)));
+        this.transform.SetParent(attachToThisObject.transform);
+        this.GetComponent<CardHandler>().cardPosition = destinationPosition;
+        GetComponent<CanvasGroup>().blocksRaycasts = true;
+
+
         print("MOSSA CONSENTITA - CARTA ATTACCATA");
+        //Se le azioni valide tramite doppio tap non contano come mosse allora dobbiamo commentare il codice qui sotto e scommentare quello poco sopra
         manager.GameActionHandler();
+
+
+        //Controlliamo se la partita è vinta
+        if (destinationPosition.Equals(CardPosition.FINAL)) {
+            manager.CheckSituationForVictory();
+        }
+
+        //Controlliamo se la partita è vinta in modo automatico
+        manager.CheckAutomaticVictory();
     }
 
 
@@ -359,6 +389,9 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     //Scopre una carta coperta nel campo lasciata libera a seguito di una mossa corretta
     public void FlipUncoveredCard ()
     {
+        //Assegniamo 5 punti per aver scoperto una carta con successo
+        manager.ScoreHandler(5);
+
         print("CARTA GIRATA CON SUCCESSO!");
         GameObject lastChildInPosition = parentToReturnTo.GetChild(parentToReturnTo.childCount - 1).gameObject;
         print("Last Card In That Position: " + lastChildInPosition.name);

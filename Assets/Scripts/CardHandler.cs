@@ -21,7 +21,6 @@ public class CardHandler : MonoBehaviour {
 
     public CardStatus cardStatus = CardStatus.COVERED;
 
-    public string segno;
     public int cardValue;
 
     public Animator anim;
