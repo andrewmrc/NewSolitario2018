@@ -336,8 +336,8 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
 
         //Imparentiamo la carta e la riposizioniamo come figlia assegnandogli la nuova posizione
-        StartCoroutine(MoveCardToPosition(attachToThisObject.transform.position - new Vector3(0, offset, 0)));
         this.transform.SetParent(attachToThisObject.transform);
+        StartCoroutine(MoveCardToPosition(attachToThisObject.transform.position - new Vector3(0, offset, 0)));
         this.GetComponent<CardHandler>().cardPosition = destinationPosition;
         GetComponent<CanvasGroup>().blocksRaycasts = true;
 
@@ -345,6 +345,10 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         print("MOSSA CONSENTITA - CARTA ATTACCATA");
         //Se le azioni valide tramite doppio tap non contano come mosse allora dobbiamo commentare il codice qui sotto e scommentare quello poco sopra
         manager.GameActionHandler();
+
+        //Registriamo gli ultimi eventi nel data recorder
+        //StartCoroutine(CallRegistrationCO());
+        manager.CallRecordGameStepData();
 
 
         //Controlliamo se la partita è vinta
@@ -355,6 +359,13 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         //Controlliamo se la partita è vinta in modo automatico
         manager.CheckAutomaticVictory();
     }
+
+
+    //public IEnumerator CallRegistrationCO ()
+    //{
+    //    yield return new WaitForSeconds(0.5f);
+    //    manager.RegisterGameStepData();
+    //}
 
 
     //Gestisce il ritorno di una carta alla sua posizione di partenza
@@ -373,12 +384,11 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
         var lastPos = this.transform.position;
         float currTime = 0f;
-        float remainingTimePerc = 0f;
 
         while (currTime < timeToComplete)
         {
             currTime += Time.deltaTime;
-            remainingTimePerc += Time.deltaTime / timeToComplete;
+
             this.transform.position = Vector3.Lerp(lastPos, newPos, currTime / timeToComplete);
             yield return null;
         }

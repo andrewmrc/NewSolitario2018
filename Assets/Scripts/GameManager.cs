@@ -37,9 +37,12 @@ public class GameManager : MonoBehaviour
 
     float remainingTimePerc;
 
+    public RecordedData dataRecorder;
+
     // Use this for initialization
     void Start()
     {
+        dataRecorder = FindObjectOfType<RecordedData>();
         orderedDeck = new GameObject[52];
         CreateDeck();
     }
@@ -250,15 +253,17 @@ public class GameManager : MonoBehaviour
 
                 var startPos = shuffledDeck[cardToExtract].transform.position;
                 float currTime = 0f;
-                remainingTimePerc = 0f;
+
 
                 while (currTime < timeToComplete)
+                //while ((shuffledDeck[cardToExtract].transform.localPosition - fieldPositions[i].transform.localPosition).magnitude >= 1f)
                 {
                     currTime += Time.deltaTime;
-                    remainingTimePerc += Time.deltaTime / timeToComplete;
+
                     shuffledDeck[cardToExtract].transform.position = Vector3.Lerp(startPos, fieldPositions[i].transform.position + new Vector3(0f, offsetPosition, 0f), currTime / timeToComplete);
                     yield return null;
                 }
+
 
                 //Se è l'ultima carta piazzata di questa posizione la scopriamo
                 if (i == j)
@@ -290,7 +295,53 @@ public class GameManager : MonoBehaviour
         //Attiva il bottone che permette di pescare le carte dal mazzo
         drawButton.SetActive(true);
 
+
+        //Salva il primo STEP di gioco in RecordedData
+        dataRecorder.gameSteps.Add(new GameSteps());
+        dataRecorder.gameSteps[0].stepIndex = ("STEP " + dataRecorder.gameSteps.Count);
+        dataRecorder.gameSteps[0].scoreRecorded = score;
+        for (int i = 0; i < orderedDeck.Length; i++)
+        {
+            dataRecorder.gameSteps[0].cardDataRecorded.Add(new CardData());
+            dataRecorder.gameSteps[0].cardDataRecorded[i].cardName = orderedDeck[i].name;
+            dataRecorder.gameSteps[0].cardDataRecorded[i].actualParent = orderedDeck[i].transform.parent;
+            dataRecorder.gameSteps[0].cardDataRecorded[i].actualTransform = orderedDeck[i].transform.localPosition;
+            dataRecorder.gameSteps[0].cardDataRecorded[i].actualCardStatus = orderedDeck[i].GetComponent<CardHandler>().cardStatus;
+            dataRecorder.gameSteps[0].cardDataRecorded[i].actualCardPosition = orderedDeck[i].GetComponent<CardHandler>().cardPosition;
+            dataRecorder.gameSteps[0].cardDataRecorded[i].raycast = orderedDeck[i].GetComponent<CanvasGroup>().blocksRaycasts;
+        }
+
+
         print("Total Cards Extracted: " + cardToExtract);
+
+    }
+
+
+    public void CallRecordGameStepData ()
+    {
+        StartCoroutine(RecordGameStepDataCO());
+    }
+
+
+    //Inserisce all'interno della struttura dati che registra ogni stato del gioco i dati attuali
+    public IEnumerator RecordGameStepDataCO ()
+    {
+        yield return new WaitForSeconds(0.25f);
+        dataRecorder.gameSteps.Add(new GameSteps());
+        int gameStepIndex = dataRecorder.gameSteps.Count-1;
+        dataRecorder.gameSteps[gameStepIndex].stepIndex = ("STEP " + (gameStepIndex+1));
+        dataRecorder.gameSteps[gameStepIndex].scoreRecorded = score;
+        for (int i = 0; i < orderedDeck.Length; i++)
+        {
+            dataRecorder.gameSteps[gameStepIndex].cardDataRecorded.Add(new CardData());
+            dataRecorder.gameSteps[gameStepIndex].cardDataRecorded[i].cardName = orderedDeck[i].name;
+            dataRecorder.gameSteps[gameStepIndex].cardDataRecorded[i].actualParent = orderedDeck[i].transform.parent;
+            dataRecorder.gameSteps[gameStepIndex].cardDataRecorded[i].actualTransform = orderedDeck[i].transform.localPosition;
+            dataRecorder.gameSteps[gameStepIndex].cardDataRecorded[i].actualCardStatus = orderedDeck[i].GetComponent<CardHandler>().cardStatus;
+            dataRecorder.gameSteps[gameStepIndex].cardDataRecorded[i].actualCardPosition = orderedDeck[i].GetComponent<CardHandler>().cardPosition;
+            dataRecorder.gameSteps[gameStepIndex].cardDataRecorded[i].raycast = orderedDeck[i].GetComponent<CanvasGroup>().blocksRaycasts;
+        }
+
     }
 
 
@@ -301,12 +352,11 @@ public class GameManager : MonoBehaviour
 
         var lastPos = cardToMove.transform.position;
         float currTime = 0f;
-        float remainingTimePerc = 0f;
 
         while (currTime < timeToComplete)
         {
             currTime += Time.deltaTime;
-            remainingTimePerc += Time.deltaTime / timeToComplete;
+
             cardToMove.transform.position = Vector3.Lerp(lastPos, newPos, currTime / timeToComplete);
             yield return null;
         }
@@ -398,9 +448,14 @@ public class GameManager : MonoBehaviour
             StartCoroutine(DrawCardBackInDeckCO());
 
         }
+
+        //Registriamo lo stato del gioco alla fine di una pescata
+        CallRecordGameStepData();
+
     }
 
 
+    //Rimette tutte le carte dalla zona DRAW alla zona DECK
     public IEnumerator DrawCardBackInDeckCO()
     {
         //Disabilitiamo il bottone per pescare dal mazzo 
@@ -411,8 +466,6 @@ public class GameManager : MonoBehaviour
         {
             if (cardsInDeck[i].GetComponent<CardHandler>().cardPosition == CardPosition.DRAW)
             {
-                //COSI' NON VA BENE!!!
-                //cardsInDeck[i].GetComponent<Animator>().speed = 3;
 
                 cardsInDeck[i].GetComponent<CardHandler>().cardPosition = CardPosition.DECK;
                 cardsInDeck[i].GetComponent<CardHandler>().cardStatus = CardStatus.COVERED;
@@ -430,6 +483,7 @@ public class GameManager : MonoBehaviour
     }
 
 
+    //Gestisce il comportamento delle carte nel dopo pescata
     public void UseDrawCardConsequences ()
     {
         if(drawCardsPositions[0].transform.childCount > 1)
@@ -532,9 +586,8 @@ public class GameManager : MonoBehaviour
     }
 
 
-
     //Controlla se ogni carta scoperta in campo può agganciarsi a quelle della zona finale e in tal caso le sposta tutte e completa la partita
-    //Viene chiamato solo dopo che tutte le carte sono in campo e scoperta
+    //Viene chiamato solo dopo che tutte le carte sono in campo e scoperte
     public void CheckAutomaticVictory()
     {
         if (!stopCheck)
@@ -543,7 +596,17 @@ public class GameManager : MonoBehaviour
 
             if (deckPosition.childCount == 0)
             {
-                controlValue++;
+                if(drawCardsPositions[0].transform.childCount == 0)
+                {
+                    if (drawCardsPositions[1].transform.childCount == 0)
+                    {
+                        if (drawCardsPositions[2].transform.childCount == 0)
+                        {
+                            drawButton.SetActive(false);
+                            controlValue++;
+                        }
+                    }
+                }
             }
 
             for (int i = 0; i < orderedDeck.Length; i++)
@@ -556,6 +619,7 @@ public class GameManager : MonoBehaviour
 
             controlValue++;
 
+            //Attiviamo il completamento automatico della partita
             if (controlValue > 1)
             {
                 stopCheck = true;
@@ -577,7 +641,8 @@ public class GameManager : MonoBehaviour
                     if(orderedDeck[i].transform.childCount < 5)
                     {
                         orderedDeck[i].GetComponent<CardInteraction>().ExecuteCheckOnAllCardInField();
-                        yield return new WaitForSeconds(0.1f);
+                        orderedDeck[i].transform.localPosition = new Vector3(0, 0, 0);
+                        yield return new WaitForSeconds(0.05f);
                     }
                 }
             }
@@ -609,11 +674,49 @@ public class GameManager : MonoBehaviour
     //Cicliamo sulla struttura dati e riportiamo tutte le carte alla loro situazione precedente e anche il punteggio
     public void UndoAction ()
     {
-        GameActionHandler();
+        if(dataRecorder.gameSteps.Count > 1)
+        {
+            //Aggiungiamo una mossa eseguita
+            GameActionHandler();
 
+            int gameStepIndexToReload = dataRecorder.gameSteps.Count-2;
+            
+            //Ripristiniamo lo score precedente
+            score = dataRecorder.gameSteps[gameStepIndexToReload].scoreRecorded;
+            scoreText.text = score.ToString();
+            scoreTextGO.text = score.ToString();
 
+            for (int i = 0; i < orderedDeck.Length; i++)
+            {
+                //Ripristiniamo lo status precedente
+                orderedDeck[i].GetComponent<CardHandler>().cardStatus = dataRecorder.gameSteps[gameStepIndexToReload].cardDataRecorded[i].actualCardStatus;
 
+                //Ripristiniamo la position precedente
+                orderedDeck[i].GetComponent<CardHandler>().cardPosition = dataRecorder.gameSteps[gameStepIndexToReload].cardDataRecorded[i].actualCardPosition;
 
+                //Ripristiniamo il parent precedente
+                orderedDeck[i].transform.SetParent(dataRecorder.gameSteps[gameStepIndexToReload].cardDataRecorded[i].actualParent);
+
+                //Ripristiniamo la transform precedente
+                //MoveCardToPosition(orderedDeck[i], dataRecorder.gameSteps[gameStepIndexToReload].cardDataRecorded[i].actualTransform, 0.5f);
+                //MoveCardToPosition(orderedDeck[i], new Vector3(0, dataRecorder.gameSteps[gameStepIndexToReload].cardDataRecorded[i].actualTransform, 0), 0.5f);
+                orderedDeck[i].transform.localPosition = dataRecorder.gameSteps[gameStepIndexToReload].cardDataRecorded[i].actualTransform;
+
+                if (orderedDeck[i].GetComponent<CardHandler>().cardPosition.Equals(CardPosition.DRAW)){
+                    orderedDeck[i].transform.localPosition = new Vector3(0, 0, 0);
+                }
+
+                //Ripristiniamo il blockraycast
+                orderedDeck[i].GetComponent<CanvasGroup>().blocksRaycasts = dataRecorder.gameSteps[gameStepIndexToReload].cardDataRecorded[i].raycast;
+
+                //Ripristiniamo se era flip o no
+                orderedDeck[i].GetComponent<CardHandler>().CheckStatus();
+            }
+
+            //Distruggiamo lo step una volta che abbiamo ripristinato lo stato precedente
+            dataRecorder.gameSteps.RemoveAt(dataRecorder.gameSteps.Count - 1);
+        }
+       
     }
 
 
